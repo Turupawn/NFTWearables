@@ -1,25 +1,29 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.15;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
-contract Characters is ERC721, ERC721Enumerable {
+contract Characters is ERC721, ERC721Enumerable, Ownable {
     uint256 tokenCount;
 
-    constructor() ERC721("Character", "CHAR") {}
+    string public baseTokenURI = "http://localhost:3005/metadata/characters/";
 
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
-        return "https://ipfs.io/ipfs/TUHASHAQUI";
-    }
+    constructor() ERC721("Character", "CHAR") {}
 
     function mint(address to) public {
         _mint(to, tokenCount);
         tokenCount  += 1;
     }
 
-    // Enumerable requirements
+    // Admin Functions
+
+    function setBaseURI(string memory baseURI) public onlyOwner {
+        baseTokenURI = baseURI;
+    }
+
+    // Overrided functions
 
     function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC721Enumerable) returns (bool)
     {
@@ -29,5 +33,9 @@ contract Characters is ERC721, ERC721Enumerable {
     function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal override(ERC721, ERC721Enumerable)
     {
         super._beforeTokenTransfer(from, to, tokenId);
+    }
+
+    function _baseURI() internal view virtual override returns (string memory) {
+        return baseTokenURI;
     }
 }

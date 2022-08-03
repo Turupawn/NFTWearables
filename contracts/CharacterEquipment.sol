@@ -16,11 +16,13 @@ contract CharacterEquipment {
         wearables = Wearables(wearablesAddress);
     }
 
+    // Public functions
+
     function equip(uint characterId, uint wearableId) public {
         require(characters.ownerOf(characterId) == msg.sender, "Sender must be the character owner.");
         require(wearables.ownerOf(wearableId) == msg.sender, "Sender must be the wearable owner.");
 
-        if(wearables.ownerOf(characterEquipment[characterId][wearables.getWearableType(wearableId)]) == address(this))
+        if(characterEquipment[characterId][wearables.getWearableType(wearableId)] != 0)
         {
             unequip(characterId, wearables.getWearableType(wearableId));
         }
@@ -32,6 +34,14 @@ contract CharacterEquipment {
     function unequip(uint characterId, uint wearableType) public {
         require(characters.ownerOf(characterId) == msg.sender, "Sender must be the character owner.");
         uint wearableId = characterEquipment[characterId][wearableType];
+        characterEquipment[characterId][wearableType] = 0;
         wearables.transferFrom(address(this), msg.sender, wearableId);
+    }
+
+    // View functions
+
+    function getCharacterEquipment(uint characterId, uint wearableType) public view returns(uint)
+    {
+        return characterEquipment[characterId][wearableType];
     }
 }

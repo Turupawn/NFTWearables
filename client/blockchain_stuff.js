@@ -1,14 +1,14 @@
 const NETWORK_ID = 5
 
-const CHARACTERS_ADDRESS = "0x49f524BB56cB060A0Ae669fBF256156add74FE66"
+const CHARACTERS_ADDRESS = "0x98b25433c945cC23Ace8Bf8efc31B7a09b4Af946"
 const CHARACTERS_ABI_PATH = "./json_abi/Characters.json"
 var characters
 
-const WEARABLES_ADDRESS = "0xB856587fe1cbA8600F75F1b1176E44250B11C788"
+const WEARABLES_ADDRESS = "0x1d420BB5674Faaf0F14b6F23650bf616AE2d32b9"
 const WEARABLES_ABI_PATH = "./json_abi/Wearables.json"
 var wearables
 
-const CHARACTER_EQUIPMENT_ADDRESS = "0xB5F4756Ef5BE714Bd35fCf976da52F1F7aD11f66"
+const CHARACTER_EQUIPMENT_ADDRESS = "0x5989F08f81C489D3E7e4A797d5D35De059f7c75c"
 const CHARACTER_EQUIPMENT_ABI_PATH = "./json_abi/CharacterEquipment.json"
 var characterEquipment
 
@@ -113,12 +113,13 @@ loadDapp()
 const onContractInitCallback = async () => {
 }
 
-function addCharacterImage(tokenId, tokenURI)
+
+function onCharacterDataRetieved(tokenId, jsonMetadata)
 {
   var span = document.createElement("span");
   span.innerHTML = tokenId
   var img = document.createElement("img");
-  img.src = tokenURI;
+  img.src = jsonMetadata["image"];
   img.setAttribute("style", "margin-top: 80px;");
 
   var div = document.getElementById("characterImages");
@@ -134,12 +135,21 @@ function addCharacterImage(tokenId, tokenURI)
   characterSelect.appendChild(newOption);
 }
 
-function addWearableImage(tokenId, tokenURI)
+function addCharacterImage(tokenId, tokenURI)
+{
+  fetch(tokenURI)
+  .then(res => res.json())
+  .then(out =>
+    onCharacterDataRetieved(tokenId, out))
+  .catch();
+}
+
+function onWearableDataRetieved(tokenId, jsonMetadata)
 {
   var span = document.createElement("span");
   span.innerHTML = tokenId
   var img = document.createElement("img");
-  img.src = tokenURI;
+  img.src = jsonMetadata["image"];
   img.setAttribute("style", "margin-top: 80px;");
 
   var div = document.getElementById("wearableImages");
@@ -153,6 +163,17 @@ function addWearableImage(tokenId, tokenURI)
   newOption.setAttribute('value', tokenId);
   var wearableSelect = document.getElementById("wearableSelect");
   wearableSelect.appendChild(newOption);
+}
+
+function addWearableImage(tokenId, tokenURI)
+{
+  console.log(tokenId)
+  console.log(tokenURI)
+  fetch(tokenURI)
+  .then(res => res.json())
+  .then(out =>
+    onWearableDataRetieved(tokenId, out))
+  .catch();
 }
 
 const onWalletConnectedCallback = async () => {
@@ -180,17 +201,12 @@ const onWalletConnectedCallback = async () => {
     accountWearablesURI.push(tokenURI)
     addWearableImage(tokenId, tokenURI)
   }
-
-  console.log(accountCharacters)
-  console.log(accountCharactersURI)
-  console.log(accountWearables)
-  console.log(accountWearablesURI)
 }
-
 
 //// Functions ////
 
 const approve = async (wearableId) => {
+  console.log("Wearable:  " + wearableId)
   const result = await wearables.methods.approve(CHARACTER_EQUIPMENT_ADDRESS, wearableId)
   .send({ from: accounts[0], gas: 0, value: 0 })
   .on('transactionHash', function(hash){
@@ -204,6 +220,8 @@ const approve = async (wearableId) => {
 }
 
 const equip = async (characterId, wearableId) => {
+  console.log("Character: " + characterId)
+  console.log("Wearable:  " + wearableId)
   const result = await characterEquipment.methods.equip(characterId, wearableId)
   .send({ from: accounts[0], gas: 0, value: 0 })
   .on('transactionHash', function(hash){
@@ -214,4 +232,25 @@ const equip = async (characterId, wearableId) => {
   .catch((revertReason) => {
     console.log("ERROR! Transaction reverted: " + revertReason.receipt.transactionHash)
   });
+}
+
+const unequip = async (characterId, wearableType) => {
+  const result = await characterEquipment.methods.unequip(characterId, wearableType)
+  .send({ from: accounts[0], gas: 0, value: 0 })
+  .on('transactionHash', function(hash){
+    document.getElementById("web3_message").textContent="Executing...";
+  })
+  .on('receipt', function(receipt){
+    document.getElementById("web3_message").textContent="Success.";    })
+  .catch((revertReason) => {
+    console.log("ERROR! Transaction reverted: " + revertReason.receipt.transactionHash)
+  });
+}
+
+const updateMetadata = async (characterId) => {
+  fetch("http://localhost:3005/update/" + characterId)
+  .then(res => res.json())
+  .then(out =>
+    console.log(out))
+  .catch();
 }

@@ -22,9 +22,9 @@ async function main() {
   await characters.mint(owner.address)
   await characters.mint(owner.address)
   await wearables.mint(owner.address, "1")
+  await wearables.mint(owner.address, "2")
   await wearables.mint(owner.address, "1")
   await wearables.mint(owner.address, "2")
-  await wearables.mint(owner.address, "3")
 }
 
 // We recommend this pattern to be able to use async/await everywhere
