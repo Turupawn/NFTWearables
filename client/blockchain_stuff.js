@@ -120,7 +120,7 @@ function onCharacterDataRetieved(tokenId, jsonMetadata)
   span.innerHTML = tokenId
   var img = document.createElement("img");
   img.src = jsonMetadata["image"];
-  img.setAttribute("style", "margin-top: 80px;");
+  img.setAttribute("style", "max-width: 250px;");
 
   var div = document.getElementById("characterImages");
   div.appendChild(span);
@@ -150,7 +150,7 @@ function onWearableDataRetieved(tokenId, jsonMetadata)
   span.innerHTML = tokenId
   var img = document.createElement("img");
   img.src = jsonMetadata["image"];
-  img.setAttribute("style", "margin-top: 80px;");
+  img.setAttribute("style", "max-width: 250px;");
 
   var div = document.getElementById("wearableImages");
   div.appendChild(span);

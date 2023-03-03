@@ -6,10 +6,10 @@ import "./Characters.sol";
 import "./Wearables.sol";
 
 contract CharacterEquipment {
-    Characters characters;
-    Wearables wearables;
+    Characters public characters;
+    Wearables public wearables;
 
-    mapping(uint => mapping(uint => uint)) characterEquipment; // [characterId][wearableType][wearableId]
+    mapping(uint => mapping(uint => uint)) public characterEquipment; // [characterId][wearableType][wearableId]
 
     constructor(address charactersAddress, address wearablesAddress) {
         characters = Characters(charactersAddress);
@@ -40,8 +40,16 @@ contract CharacterEquipment {
 
     // View functions
 
-    function getCharacterEquipment(uint characterId, uint wearableType) public view returns(uint)
-    {
+    function getCharacterEquipment(uint characterId, uint wearableType) public view returns(uint) {
         return characterEquipment[characterId][wearableType];
+    }
+
+    function getCharacterLevel(uint characterId, uint wearableTypeAmount) public view returns(uint) {
+        uint totalLevel;
+        for(uint i=1; i<=wearableTypeAmount; i++)
+        {
+            totalLevel += wearables.getLevel(getCharacterEquipment(characterId, i));
+        }
+        return totalLevel;
     }
 }

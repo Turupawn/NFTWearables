@@ -6,7 +6,7 @@ const CHARACTER_EQUIPMENT_ADDRESS = "0x5989F08f81C489D3E7e4A797d5D35De059f7c75c"
 const PORT = 3005
 const IS_REVEALED = true
 const UNREVEALED_METADATA = {
-  "name":"Unrevealed Croc",
+  "name":"Unrevealed Character",
   "description":"???",
   "image":"http://134.209.33.178:3000/unrevealed/image.png",
   "attributes":[{"???":"???"}]
@@ -126,13 +126,14 @@ async function updateMetadata(res, characterId) {
   console.log("Sword:     " + swordEquipmentId)
   console.log("==============")
   // Reset uhm
-  mergeImages("./images/charactersOriginal/" + characterId + ".png",
-  "./images/charactersOriginal/" + characterId + ".png",
+  var characterTypeId = await charactersContract.methods.getCharacterType(characterId).call()
+  mergeImages("./images/charactersTypes/" + characterTypeId + ".png",
+  "./images/charactersTypes/" + characterTypeId + ".png",
   "./images/charactersEquiped/" + characterId + ".png")
 
   if(shieldEquipmentId != "0")
   {
-    mergeImages("./images/charactersOriginal/" + characterId + ".png",
+    mergeImages("./images/charactersTypes/" + characterTypeId + ".png",
       "./images/wearables/" + shieldEquipmentId + ".png",
       "./images/charactersEquiped/" + characterId + ".png")
   }
