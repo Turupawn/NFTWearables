@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.15;
+pragma solidity 0.8.19;
 
 import "./Characters.sol";
 import "./CharacterEquipment.sol";
@@ -10,8 +10,8 @@ contract Dungeons is Ownable {
     Characters public characters;
     Wearables public wearables;
     CharacterEquipment public characterEquipment;
-    mapping(uint => Registration) public registration;
-    mapping(uint => Dungeon) public dungeons;
+    mapping(uint registrationId => Registration) public registration;
+    mapping(uint dungeonId => Dungeon) public dungeons;
 
     // Internal variables
     uint randomNonce;
@@ -93,6 +93,23 @@ contract Dungeons is Ownable {
         revert("Invalid loot");
     }
 
+    // View functions
+
+    function getDungeonDuration(uint dungeonId) public view returns(uint)
+    {
+        return dungeons[dungeonId].duration;
+    }
+
+    function getDungeonMinimumLevel(uint dungeonId) public view returns(uint)
+    {
+        return dungeons[dungeonId].minimumLevel;
+    }
+
+    function getDungeonLootProbability(uint dungeonId, uint wearableId) public view returns(uint)
+    {
+        return dungeons[dungeonId].lootProbability[wearableId];
+    }
+
     // Owner functions
 
     function setDungeonDuration(uint dungeonId, uint duration) public onlyOwner {
@@ -107,7 +124,7 @@ contract Dungeons is Ownable {
         dungeons[dungeonId].lootProbability[wearableId] = probability;
     }
 
-    function setWearablesAmount(uint wearablesAmount) public onlyOwner {
+    function setWearablesAmount(uint amount) public onlyOwner {
         wearablesAmount = amount;
     }
 

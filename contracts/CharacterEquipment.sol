@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.15;
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "./Characters.sol";
@@ -9,7 +9,7 @@ contract CharacterEquipment {
     Characters public characters;
     Wearables public wearables;
 
-    mapping(uint => mapping(uint => uint)) public characterEquipment; // [characterId][wearableType][wearableId]
+    mapping(uint characterId => mapping(uint wearableType => uint wearableId)) public characterEquipment;
 
     constructor(address charactersAddress, address wearablesAddress) {
         characters = Characters(charactersAddress);

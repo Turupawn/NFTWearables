@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.15;
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
@@ -7,9 +7,9 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
 contract Wearables is ERC721, ERC721Enumerable, Ownable {
     uint256 public tokenCount;
-    mapping(uint => uint) public wearableTypes;
-    mapping(uint => uint) public wearableTypeLevel;
-    mapping(address => bool) public isMinter;
+    mapping(uint wearableId => uint wearableType) public wearableTypes;
+    mapping(uint wearableType => uint level) public wearableTypeLevel;
+    mapping(address account => bool isMinter) public isMinter;
 
     string public baseTokenURI = "http://localhost:3005/metadata/wearables/";
 
@@ -31,10 +31,6 @@ contract Wearables is ERC721, ERC721Enumerable, Ownable {
         tokenCount += 1; // Token 0 is invalid
         _mint(to, tokenCount);
         wearableTypes[tokenCount] = wearableType;
-    }
-
-    function getWearableType(uint tokenId) public view returns(uint) {
-        return wearableTypes[tokenId];
     }
 
     // Owner Functions
@@ -69,5 +65,9 @@ contract Wearables is ERC721, ERC721Enumerable, Ownable {
 
     function getLevel(uint wearableId) public view returns(uint) {
         return wearableTypeLevel[wearableTypes[wearableId]];
+    }
+
+    function getWearableType(uint wearableId) public view returns(uint) {
+        return wearableTypes[wearableId];
     }
 }

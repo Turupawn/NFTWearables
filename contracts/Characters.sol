@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.15;
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
@@ -7,8 +7,8 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
 contract Characters is ERC721, ERC721Enumerable, Ownable {
     // Public variables
-    uint public tokenCount;
-    mapping(uint => uint) characterTypes;
+    uint public tokenCount = 1;
+    mapping(uint characterId => uint characterType) public characterTypes;
     uint public characterTypeAmount = 4;
 
     // Internal variables
@@ -26,7 +26,7 @@ contract Characters is ERC721, ERC721Enumerable, Ownable {
 
     // Public Functions
 
-    function getCharacterType(uint characterId) public returns(uint) {
+    function getCharacterType(uint characterId) public view returns(uint) {
         return characterTypes[characterId];
     }
 

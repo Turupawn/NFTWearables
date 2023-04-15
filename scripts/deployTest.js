@@ -32,22 +32,65 @@ async function main() {
 
   await wearables.setMinter(dungeons.address, true)
 
+  console.log("==All Dungeons==")
+  for(i=1; i<=4; i++)
+  {
+    dungeon = await dungeons.dungeons(i)
+    console.log("Dungeon " + i)
+    console.log(
+      " duration: " + dungeon[0] +
+      " minimum level: " + dungeon[1])
+    probabilities = ""
+    for(j=1; j<=8; j++)
+    {
+      probability = await dungeons.getDungeonLootProbability(i, j)
+      if(probability != 0)
+      {
+        probabilities += " wearable " + j + " " + probability/100 + "%,"
+      }
+    }
+    console.log(probabilities)
+  }
+  console.log("== end ==")
+
+  console.log("==All Wearables==")
+  for(i=1; i<=4; i++)
+  {
+
+  }
+  console.log("== end ==")
+
   // Game
-
+  console.log("Let's mint two characters")
   await characters.mint(owner.address)
   await characters.mint(owner.address)
 
-  await dungeons.enterDungeon(0, 1);
+  console.log("==My Characters==")
+  for(i=0; i<await characters.balanceOf(owner.address); i++)
+  {
+    characterId = await characters.tokenOfOwnerByIndex(owner.address, i)
+    characterType = await characters.characterTypes(characterId)
+    console.log("Id: " + characterId + ", " + " type: " + characterType)
+  }
+  console.log("== end ==")
+
+  console.log("Now we enter the first dungeon with character 1 to dungeon 1 and wait")
+  await dungeons.enterDungeon(1, 1);
   await time.increaseTo(1777820202);
-  await dungeons.loot(0);
+  console.log("Now we loot")
+  await dungeons.loot(1);
+  console.log("We equip the looted equipment")
   await wearables.approve(characterEquipment.address, 1) 
-  await characterEquipment.equip(0,1)
-  await dungeons.enterDungeon(0, 2);
+  console.log("We equip to the character 1 the item 1")
+  await characterEquipment.equip(1, 1)
+  console.log("We now enter the dungeon 2")
+  await dungeons.enterDungeon(1, 2);
   await time.increaseTo(1877820202);
-  await dungeons.loot(0);
+  await dungeons.loot(1);
   await wearables.approve(characterEquipment.address, 2) 
-  await characterEquipment.equip(0,2)
-  await dungeons.enterDungeon(0, 3);
+  await characterEquipment.equip(1,2)
+  //console.log("We now enter the dungeon 3")
+  //await dungeons.enterDungeon(1, 3);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
