@@ -12,10 +12,11 @@ npx hardhat node
 npx hardhat run scripts/deploy.js
 ```
 
-## Goerli deploy
+## Sepolia deploy
 
 ```
-Characters:           0x98b25433c945cC23Ace8Bf8efc31B7a09b4Af946
-Wearables:            0x1d420BB5674Faaf0F14b6F23650bf616AE2d32b9
-Character equipment:  0x5989F08f81C489D3E7e4A797d5D35De059f7c75c
+Characters:           0xbbAd0e891922A8A4a7e9c39d4cc0559117016fec
+Wearables:            0x38E33D067F03a5cDc02C301b2c306cb0414549Bf
+Character equipment:  0xe7b82794Cab21e665a3e6f8ea562d392AA6E0619
+Dungeons:             0xd5dd33650Ef1DC6D23069aEDC8EAE87b0D3619B2
 ```

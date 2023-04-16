@@ -1,16 +1,20 @@
-const NETWORK_ID = 5
+const NETWORK_ID = 11155111
 
-const CHARACTERS_ADDRESS = "0x98b25433c945cC23Ace8Bf8efc31B7a09b4Af946"
+const CHARACTERS_ADDRESS = "0xbbAd0e891922A8A4a7e9c39d4cc0559117016fec"
 const CHARACTERS_ABI_PATH = "./json_abi/Characters.json"
 var characters
 
-const WEARABLES_ADDRESS = "0x1d420BB5674Faaf0F14b6F23650bf616AE2d32b9"
+const WEARABLES_ADDRESS = "0x38E33D067F03a5cDc02C301b2c306cb0414549Bf"
 const WEARABLES_ABI_PATH = "./json_abi/Wearables.json"
 var wearables
 
-const CHARACTER_EQUIPMENT_ADDRESS = "0x5989F08f81C489D3E7e4A797d5D35De059f7c75c"
+const CHARACTER_EQUIPMENT_ADDRESS = "0xe7b82794Cab21e665a3e6f8ea562d392AA6E0619"
 const CHARACTER_EQUIPMENT_ABI_PATH = "./json_abi/CharacterEquipment.json"
 var characterEquipment
+
+const DUNGEONS_ADDRESS = "0xd5dd33650Ef1DC6D23069aEDC8EAE87b0D3619B2"
+const DUNGEONS_ABI_PATH = "./json_abi/Dungeons.json"
+var dungeons
 
 var accounts
 var web3
@@ -76,6 +80,7 @@ async function loadDapp() {
           characters = await getContract(web3, CHARACTERS_ADDRESS, CHARACTERS_ABI_PATH)
           wearables = await getContract(web3, WEARABLES_ADDRESS, WEARABLES_ABI_PATH)
           characterEquipment = await getContract(web3, CHARACTER_EQUIPMENT_ADDRESS, CHARACTER_EQUIPMENT_ABI_PATH)
+          dungeons = await getContract(web3, DUNGEONS_ADDRESS, DUNGEONS_ABI_PATH)
           document.getElementById("web3_message").textContent="You are connected to Metamask"
           onContractInitCallback()
           web3.eth.getAccounts(function(err, _accounts){
@@ -95,7 +100,7 @@ async function loadDapp() {
         };
         awaitContract();
       } else {
-        document.getElementById("web3_message").textContent="Please connect to Goerli";
+        document.getElementById("web3_message").textContent="Please connect to Sepolia";
       }
     });
   };
@@ -111,6 +116,48 @@ async function connectWallet() {
 loadDapp()
 
 const onContractInitCallback = async () => {
+  for(dungeonId=1; dungeonId<=4; dungeonId+=1)
+  {
+    dungeon = await dungeons.methods.dungeons(dungeonId).call()
+
+    const dungeonText = document.createTextNode(
+      "Dungeon " + dungeonId + " " +
+      " duration: " + dungeon[0] +
+      " minimum level: " + dungeon[1]
+    );
+    var dungeonsElement = document.getElementById("dungeonsElement");
+    dungeonsElement.appendChild(dungeonText);
+    dungeonsElement.appendChild(document.createElement("br"));
+    probabilities = ""
+    for(wearableId=1; wearableId<=8; wearableId++)
+    {
+      probability = await dungeons.methods.getDungeonLootProbability(dungeonId, wearableId).call()
+      if(probability != 0)
+      {
+        probabilities += " wearable " + wearableId + " " + probability/100 + "%,"
+      }
+    }
+    const dungeonProbabilitiesText = document.createTextNode(
+      probabilities
+    );
+    dungeonsElement.appendChild(dungeonProbabilitiesText);
+    dungeonsElement.appendChild(document.createElement("br"));
+    let enterDungeonButton = document.createElement("button");
+    enterDungeonButton.innerHTML = "Enter";
+    enterDungeonButton.dungeonId = "" + dungeonId;
+    enterDungeonButton.onclick = function (eventParam) {
+      enterDungeon("1"/* TODO */, eventParam.srcElement.dungeonId)
+    };
+    let lootButton = document.createElement("button");
+    lootButton.innerHTML = "Loot";
+    lootButton.onclick = function () {
+      loot("1"/* TODO */)
+    };
+    dungeonsElement.appendChild(enterDungeonButton);
+    dungeonsElement.appendChild(lootButton);
+    dungeonsElement.appendChild(document.createElement("br"));
+    dungeonsElement.appendChild(document.createElement("br"));
+  }
 }
 
 
@@ -191,6 +238,22 @@ const onWalletConnectedCallback = async () => {
     addCharacterImage(tokenId,tokenURI)
   }
 
+  let registration = await dungeons.methods.registration(accountCharacters[0]).call()
+  characterStatus = ""
+  if(registration.dungeonId != "0")
+  {
+    characterStatus = "Your character is currently at dungeon #" +
+      + registration.dungeonId + ". " +
+      "Come back at " + registration.advanceTimestamp
+  } else
+  {
+    characterStatus = "Your character is ready to enter a dungeon."
+  }
+  document.getElementById("characterStatusElement").textContent = characterStatus;
+
+  let characterLevel = await characterEquipment.methods.getCharacterLevel("1" /* TODO */, "2").call()
+  document.getElementById("characterLevelElement").textContent = "Character Level: " + characterLevel;
+
   accountWearables = []
   accountWearablesURI = []
   for(i=0; i<accountWearableBalance; i++)
@@ -206,7 +269,6 @@ const onWalletConnectedCallback = async () => {
 //// Functions ////
 
 const approve = async (wearableId) => {
-  console.log("Wearable:  " + wearableId)
   const result = await wearables.methods.approve(CHARACTER_EQUIPMENT_ADDRESS, wearableId)
   .send({ from: accounts[0], gas: 0, value: 0 })
   .on('transactionHash', function(hash){
@@ -219,9 +281,46 @@ const approve = async (wearableId) => {
   });
 }
 
+const mintCharacter = async (wearableId) => {
+  const result = await characters.methods.mint(accounts[0])
+  .send({ from: accounts[0], gas: 0, value: 0 })
+  .on('transactionHash', function(hash){
+    document.getElementById("web3_message").textContent="Executing...";
+  })
+  .on('receipt', function(receipt){
+    document.getElementById("web3_message").textContent="Success.";    })
+  .catch((revertReason) => {
+    console.log("ERROR! Transaction reverted: " + revertReason.receipt.transactionHash)
+  });
+}
+
+const enterDungeon = async (characterId, dungeonId) => {
+  const result = await dungeons.methods.enterDungeon(characterId, dungeonId)
+  .send({ from: accounts[0], gas: 0, value: 0 })
+  .on('transactionHash', function(hash){
+    document.getElementById("web3_message").textContent="Executing...";
+  })
+  .on('receipt', function(receipt){
+    document.getElementById("web3_message").textContent="Success.";    })
+  .catch((revertReason) => {
+    console.log("ERROR! Transaction reverted: " + revertReason.receipt.transactionHash)
+  });
+}
+
+const loot = async (characterId) => {
+  const result = await dungeons.methods.loot(characterId)
+  .send({ from: accounts[0], gas: 0, value: 0 })
+  .on('transactionHash', function(hash){
+    document.getElementById("web3_message").textContent="Executing...";
+  })
+  .on('receipt', function(receipt){
+    document.getElementById("web3_message").textContent="Success.";    })
+  .catch((revertReason) => {
+    console.log("ERROR! Transaction reverted: " + revertReason.receipt.transactionHash)
+  });
+}
+
 const equip = async (characterId, wearableId) => {
-  console.log("Character: " + characterId)
-  console.log("Wearable:  " + wearableId)
   const result = await characterEquipment.methods.equip(characterId, wearableId)
   .send({ from: accounts[0], gas: 0, value: 0 })
   .on('transactionHash', function(hash){

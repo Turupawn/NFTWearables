@@ -1,7 +1,7 @@
 var MAX_SUPPLY = 99999999
-const CHARACTERS_ADDRESS = "0x98b25433c945cC23Ace8Bf8efc31B7a09b4Af946"
-const WEARABLES_ADDRESS = "0x1d420BB5674Faaf0F14b6F23650bf616AE2d32b9"
-const CHARACTER_EQUIPMENT_ADDRESS = "0x5989F08f81C489D3E7e4A797d5D35De059f7c75c"
+const CHARACTERS_ADDRESS = "0xbbAd0e891922A8A4a7e9c39d4cc0559117016fec"
+const WEARABLES_ADDRESS = "0x38E33D067F03a5cDc02C301b2c306cb0414549Bf"
+const CHARACTER_EQUIPMENT_ADDRESS = "0xe7b82794Cab21e665a3e6f8ea562d392AA6E0619"
 
 const PORT = 3005
 const IS_REVEALED = true
@@ -44,14 +44,14 @@ async function initAPI() {
 async function serveMetadataCharacters(res, nft_id) {
   var token_count = parseInt(await charactersContract.methods.totalSupply().call())
   let return_value = {}
-  if(nft_id < 0)
+  if(nft_id <= 0)
   {
-    return_value = {error: "NFT ID must be greater than 0"}
+    return_value = {error: "NFT ID must be greater than 1"}
   }
   else if(nft_id >= MAX_SUPPLY)
   {
     return_value = {error: "NFT ID must be lesser than max supply"}
-  }else if (nft_id >= token_count)
+  }else if (nft_id - 1 >= token_count)
   {
     return_value = {error: "NFT ID must be already minted"}
   }else
@@ -130,6 +130,8 @@ async function updateMetadata(res, characterId) {
   mergeImages("./images/charactersTypes/" + characterTypeId + ".png",
   "./images/charactersTypes/" + characterTypeId + ".png",
   "./images/charactersEquiped/" + characterId + ".png")
+  console.log(characterTypeId)
+  console.log(characterTypeId)
 
   if(shieldEquipmentId != "0")
   {

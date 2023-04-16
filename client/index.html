@@ -8,7 +8,11 @@
   <p id="account_address" style="display: none"></p>
   <p id="web3_message"></p>
   <p id="contract_state"></p>
+  <p id="characterLevelElement"></p>
+  <p id="characterStatusElement"></p>
   <br>
+  <input type="button" value="Mint" onclick="_mintCharacter()"></input><br>
+  <div id="dungeonsElement"></div>
   <div id="characterImages"></div>
   <div id="wearableImages"></div>
 
@@ -38,6 +42,11 @@
     characterSelect = document.getElementById("characterSelect").value
     wearableSelect = document.getElementById("wearableSelect").value
     equip(characterSelect, wearableSelect)
+  }
+
+  function _mintCharacter()
+  {
+    mintCharacter()
   }
 
   function _unequip()

@@ -19,6 +19,7 @@ contract CharacterEquipment {
     // Public functions
 
     function equip(uint characterId, uint wearableId) public {
+        // TODO equip should rever if type doesn't match
         require(characters.ownerOf(characterId) == msg.sender, "Sender must be the character owner.");
         require(wearables.ownerOf(wearableId) == msg.sender, "Sender must be the wearable owner.");
 

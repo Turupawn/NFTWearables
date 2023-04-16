@@ -32,6 +32,8 @@ async function main() {
 
   await wearables.setMinter(dungeons.address, true)
 
+  return;
+
   console.log("==All Dungeons==")
   for(i=1; i<=4; i++)
   {

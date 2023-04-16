@@ -10,7 +10,7 @@ contract Dungeons is Ownable {
     Characters public characters;
     Wearables public wearables;
     CharacterEquipment public characterEquipment;
-    mapping(uint registrationId => Registration) public registration;
+    mapping(uint characterId => Registration) public registration;
     mapping(uint dungeonId => Dungeon) public dungeons;
 
     // Internal variables
