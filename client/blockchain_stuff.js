@@ -1,6 +1,6 @@
 const NETWORK_ID = 10
 
-const METADA_API_URL = "http://dungeons.777blocks.com:3005"
+const METADA_API_URL = "https://dungeons.777blocks.com/api"
 
 const CHARACTERS_ADDRESS = "0x24EF68753793b732972E83B67B70409D4049A487"
 const CHARACTERS_ABI_PATH = "./json_abi/Characters.json"
