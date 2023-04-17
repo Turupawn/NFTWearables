@@ -50,6 +50,7 @@ Then we verify them.
 npx hardhat verify ... --network optimism
 ```
 
+* Update contracts in JS and Node
 * Launch the API backend on digital ocean
 * Test if API is running correctly
 * Bind domain name to API

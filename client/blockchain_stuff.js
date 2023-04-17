@@ -1,20 +1,20 @@
-const NETWORK_ID = 11155111
+const NETWORK_ID = 10
 
 const METADA_API_URL = "http://localhost:3005"
 
-const CHARACTERS_ADDRESS = "0x28EDA267FcB76Da69D7ba358BbBB2e7180C32227"
+const CHARACTERS_ADDRESS = "0x24EF68753793b732972E83B67B70409D4049A487"
 const CHARACTERS_ABI_PATH = "./json_abi/Characters.json"
 var characters
 
-const WEARABLES_ADDRESS = "0x28Af59a8688b0EBaDAb6ad0480459a6Eb0dfd13e"
+const WEARABLES_ADDRESS = "0x399Aef07480Da9391f1185b0a4dFA5d568ddA1BD"
 const WEARABLES_ABI_PATH = "./json_abi/Wearables.json"
 var wearables
 
-const CHARACTER_EQUIPMENT_ADDRESS = "0xE0E2ee0FFB00814a17bD75552421a9D6De7E8e57"
+const CHARACTER_EQUIPMENT_ADDRESS = "0x73AC4AcA67a75a92e6F303C35925d37f395094D0"
 const CHARACTER_EQUIPMENT_ABI_PATH = "./json_abi/CharacterEquipment.json"
 var characterEquipment
 
-const DUNGEONS_ADDRESS = "0x1D59e95cd7daA226cD718B3CBaFbBbB8AF528D66"
+const DUNGEONS_ADDRESS = "0xcBd7052a962fAd922AFf01D27B68A4DcA1EdA413"
 const DUNGEONS_ABI_PATH = "./json_abi/Dungeons.json"
 var dungeons
 
@@ -119,7 +119,7 @@ async function loadDapp() {
         };
         awaitContract();
       } else {
-        document.getElementById("web3_message").textContent="Please connect to Sepolia";
+        document.getElementById("web3_message").textContent="Please connect to Optimism";
       }
     });
   };
