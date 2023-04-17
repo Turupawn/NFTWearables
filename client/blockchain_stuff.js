@@ -1,23 +1,42 @@
 const NETWORK_ID = 11155111
 
-const CHARACTERS_ADDRESS = "0xbbAd0e891922A8A4a7e9c39d4cc0559117016fec"
+const METADA_API_URL = "http://localhost:3005"
+
+const CHARACTERS_ADDRESS = "0x28EDA267FcB76Da69D7ba358BbBB2e7180C32227"
 const CHARACTERS_ABI_PATH = "./json_abi/Characters.json"
 var characters
 
-const WEARABLES_ADDRESS = "0x38E33D067F03a5cDc02C301b2c306cb0414549Bf"
+const WEARABLES_ADDRESS = "0x28Af59a8688b0EBaDAb6ad0480459a6Eb0dfd13e"
 const WEARABLES_ABI_PATH = "./json_abi/Wearables.json"
 var wearables
 
-const CHARACTER_EQUIPMENT_ADDRESS = "0xe7b82794Cab21e665a3e6f8ea562d392AA6E0619"
+const CHARACTER_EQUIPMENT_ADDRESS = "0xE0E2ee0FFB00814a17bD75552421a9D6De7E8e57"
 const CHARACTER_EQUIPMENT_ABI_PATH = "./json_abi/CharacterEquipment.json"
 var characterEquipment
 
-const DUNGEONS_ADDRESS = "0xd5dd33650Ef1DC6D23069aEDC8EAE87b0D3619B2"
+const DUNGEONS_ADDRESS = "0x1D59e95cd7daA226cD718B3CBaFbBbB8AF528D66"
 const DUNGEONS_ABI_PATH = "./json_abi/Dungeons.json"
 var dungeons
 
 var accounts
 var web3
+
+// Game vars
+mainCharacterId = null
+currentDungeon = null
+characterLevel = null
+lootTimestamp = ""
+currentTime = Math.round(Date.now() / 1000)
+
+function readableTime(seconds) {
+  if(seconds > 60*60)
+  {
+    return Math.ceil(seconds/60/60) + " hours"
+  } else if (seconds > 60) {
+    return Math.ceil(seconds/60) + " minutes"
+  }
+  return seconds + " seconds"
+}
 
 function metamaskReloadCallback() {
   window.ethereum.on('accountsChanged', (accounts) => {
@@ -116,153 +135,223 @@ async function connectWallet() {
 loadDapp()
 
 const onContractInitCallback = async () => {
-  for(dungeonId=1; dungeonId<=4; dungeonId+=1)
-  {
-    dungeon = await dungeons.methods.dungeons(dungeonId).call()
-
-    const dungeonText = document.createTextNode(
-      "Dungeon " + dungeonId + " " +
-      " duration: " + dungeon[0] +
-      " minimum level: " + dungeon[1]
-    );
-    var dungeonsElement = document.getElementById("dungeonsElement");
-    dungeonsElement.appendChild(dungeonText);
-    dungeonsElement.appendChild(document.createElement("br"));
-    probabilities = ""
-    for(wearableId=1; wearableId<=8; wearableId++)
-    {
-      probability = await dungeons.methods.getDungeonLootProbability(dungeonId, wearableId).call()
-      if(probability != 0)
-      {
-        probabilities += " wearable " + wearableId + " " + probability/100 + "%,"
-      }
-    }
-    const dungeonProbabilitiesText = document.createTextNode(
-      probabilities
-    );
-    dungeonsElement.appendChild(dungeonProbabilitiesText);
-    dungeonsElement.appendChild(document.createElement("br"));
-    let enterDungeonButton = document.createElement("button");
-    enterDungeonButton.innerHTML = "Enter";
-    enterDungeonButton.dungeonId = "" + dungeonId;
-    enterDungeonButton.onclick = function (eventParam) {
-      enterDungeon("1"/* TODO */, eventParam.srcElement.dungeonId)
-    };
-    let lootButton = document.createElement("button");
-    lootButton.innerHTML = "Loot";
-    lootButton.onclick = function () {
-      loot("1"/* TODO */)
-    };
-    dungeonsElement.appendChild(enterDungeonButton);
-    dungeonsElement.appendChild(lootButton);
-    dungeonsElement.appendChild(document.createElement("br"));
-    dungeonsElement.appendChild(document.createElement("br"));
-  }
 }
 
 
-function onCharacterDataRetieved(tokenId, jsonMetadata)
+function onCharacterDataRetieved(characterId, characterLevel, jsonMetadata)
 {
-  var span = document.createElement("span");
-  span.innerHTML = tokenId
+  var characterIdElement = document.createElement("span");
+  characterIdElement.innerHTML = "Character id: " + characterId
+  var characterLevelElement = document.createElement("span");
+  characterLevelElement.innerHTML = "Level: " + characterLevel
   var img = document.createElement("img");
   img.src = jsonMetadata["image"];
   img.setAttribute("style", "max-width: 250px;");
 
-  var div = document.getElementById("characterImages");
-  div.appendChild(span);
-  div.appendChild(img);
-  div.setAttribute("style", "text-align:center");
+  let updateMetadataButton = document.createElement("button");
+  updateMetadataButton.innerHTML = "Update metadata";
+  updateMetadataButton.characterId = "" + characterId;
+  updateMetadataButton.onclick = function (eventParam) {
+    updateMetadata(eventParam.srcElement.characterId)
+  };
 
-  const newOption = document.createElement('option');
-  const optionText = document.createTextNode(tokenId);
-  newOption.appendChild(optionText);
-  newOption.setAttribute('value', tokenId);
-  var characterSelect = document.getElementById("characterSelect");
-  characterSelect.appendChild(newOption);
+  var div = document.getElementById("characterImages");
+  div.appendChild(img);
+  div.appendChild(document.createElement("br"));
+  div.appendChild(characterIdElement);
+  div.appendChild(document.createElement("br"));
+  div.appendChild(characterLevelElement);
+  div.appendChild(document.createElement("br"));
+  div.appendChild(updateMetadataButton);
+  div.appendChild(document.createElement("br"));
+  div.setAttribute("style", "text-align:center");
 }
 
-function addCharacterImage(tokenId, tokenURI)
+function addCharacterImage(tokenId, characterLevel, tokenURI)
 {
   fetch(tokenURI)
   .then(res => res.json())
   .then(out =>
-    onCharacterDataRetieved(tokenId, out))
+    onCharacterDataRetieved(tokenId, characterLevel, out))
   .catch();
 }
 
-function onWearableDataRetieved(tokenId, jsonMetadata)
+function onWearableDataRetieved(wearableId, wearableType, wearableLevel, jsonMetadata)
 {
-  var span = document.createElement("span");
-  span.innerHTML = tokenId
+  var wearableIdElement = document.createElement("span");
+  wearableIdElement.innerHTML = "Wearable id: " + wearableId
+  var wearableLevelElement = document.createElement("span");
+  wearableLevelElement.innerHTML = "Level: " + wearableLevel
   var img = document.createElement("img");
   img.src = jsonMetadata["image"];
   img.setAttribute("style", "max-width: 250px;");
 
-  var div = document.getElementById("wearableImages");
-  div.appendChild(span);
-  div.appendChild(img);
-  div.setAttribute("style", "text-align:center");
+  let approveButton = document.createElement("button");
+  approveButton.innerHTML = "Approve";
+  approveButton.wearableId = "" + wearableId;
+  approveButton.onclick = function (eventParam) {
+    approve(eventParam.srcElement.wearableId)
+  };
 
-  const newOption = document.createElement('option');
-  const optionText = document.createTextNode(tokenId);
-  newOption.appendChild(optionText);
-  newOption.setAttribute('value', tokenId);
-  var wearableSelect = document.getElementById("wearableSelect");
-  wearableSelect.appendChild(newOption);
+  let equipButton = document.createElement("button");
+  equipButton.innerHTML = "Equip";
+  equipButton.wearableId = "" + wearableId;
+  equipButton.onclick = function (eventParam) {
+    equip(eventParam.srcElement.wearableId)
+  };
+
+  var div = document.getElementById("wearableImages");
+  div.appendChild(img);
+  div.appendChild(document.createElement("br"));
+  div.appendChild(wearableIdElement);
+  div.appendChild(document.createElement("br"));
+  div.appendChild(wearableLevelElement);
+  div.appendChild(document.createElement("br"));
+  div.appendChild(approveButton);
+  div.appendChild(equipButton);
+  div.appendChild(document.createElement("br"));
+  div.setAttribute("style", "text-align:center");
 }
 
-function addWearableImage(tokenId, tokenURI)
+function addWearableImage(wearableId, wearableType, wearableLevel, tokenURI)
 {
-  console.log(tokenId)
-  console.log(tokenURI)
   fetch(tokenURI)
   .then(res => res.json())
   .then(out =>
-    onWearableDataRetieved(tokenId, out))
+    onWearableDataRetieved(wearableId, wearableType, wearableLevel, out))
   .catch();
 }
 
 const onWalletConnectedCallback = async () => {
   accountCharacterBalance = await characters.methods.balanceOf(accounts[0]).call()
-  accountWearableBalance = await wearables.methods.balanceOf(accounts[0]).call()
-  
-  accountCharacters = []
-  accountCharactersURI = []
-  for(i=0; i<accountCharacterBalance; i++)
-  {
-    let tokenId  = await characters.methods.tokenOfOwnerByIndex(accounts[0], i).call()
-    let tokenURI = await characters.methods.tokenURI(tokenId).call()
-    accountCharacters.push(tokenId)
-    accountCharactersURI.push(tokenURI)
-    addCharacterImage(tokenId,tokenURI)
-  }
 
-  let registration = await dungeons.methods.registration(accountCharacters[0]).call()
-  characterStatus = ""
-  if(registration.dungeonId != "0")
+  if(accountCharacterBalance <= 0)
   {
-    characterStatus = "Your character is currently at dungeon #" +
-      + registration.dungeonId + ". " +
-      "Come back at " + registration.advanceTimestamp
+    document.getElementById("characterStatusElement").textContent = "You must be whitelisted to mint your first character.";
+    
+    accountIsWhitelisted = await characters.methods.whitelist(accounts[0]).call()
+    if(accountIsWhitelisted)
+    {
+      document.getElementById("mintElement").style.display = "block";
+    }
   } else
   {
-    characterStatus = "Your character is ready to enter a dungeon."
-  }
-  document.getElementById("characterStatusElement").textContent = characterStatus;
+    document.getElementById("gameElement").style.display = "block";
+    accountWearableBalance = await wearables.methods.balanceOf(accounts[0]).call()
 
-  let characterLevel = await characterEquipment.methods.getCharacterLevel("1" /* TODO */, "2").call()
-  document.getElementById("characterLevelElement").textContent = "Character Level: " + characterLevel;
+    mainCharacterId = await characters.methods.tokenOfOwnerByIndex(accounts[0], 0).call()
+    
+    accountCharacters = []
+    accountCharactersURI = []
+    for(i=0; i<accountCharacterBalance; i++)
+    {
+      let tokenId  = await characters.methods.tokenOfOwnerByIndex(accounts[0], i).call()
+      let tokenURI = await characters.methods.tokenURI(tokenId).call()
+      let characterLevel = await characterEquipment.methods.getCharacterLevel(tokenId, "2").call()
+      accountCharacters.push(tokenId)
+      accountCharactersURI.push(tokenURI)
+      addCharacterImage(tokenId, characterLevel, tokenURI)
+    }
 
-  accountWearables = []
-  accountWearablesURI = []
-  for(i=0; i<accountWearableBalance; i++)
-  {
-    let tokenId  = await wearables.methods.tokenOfOwnerByIndex(accounts[0], i).call()
-    let tokenURI = await wearables.methods.tokenURI(tokenId).call()
-    accountWearables.push(tokenId)
-    accountWearablesURI.push(tokenURI)
-    addWearableImage(tokenId, tokenURI)
+    let registration = await dungeons.methods.registration(accountCharacters[0]).call()
+    characterStatus = ""
+    if(registration.dungeonId != "0")
+    {
+      currentDungeon = registration.dungeonId
+      lootTimestamp = registration.advanceTimestamp
+      characterStatus = "Your character is currently at dungeon #"+ registration.dungeonId + ". "
+      if(currentTime > lootTimestamp)
+      {
+        characterStatus += "Go loot now!"
+      } else
+      {
+        characterStatus += "Come back in " + readableTime(lootTimestamp - currentTime)
+      }
+
+    } else
+    {
+      characterStatus = "Your character is ready to enter a dungeon."
+    }
+    document.getElementById("characterStatusElement").textContent = characterStatus;
+
+    let characterLevel = await characterEquipment.methods.getCharacterLevel(mainCharacterId, "2").call()
+    characterLevel = characterLevel
+
+    accountWearables = []
+    accountWearablesURI = []
+    for(i=0; i<accountWearableBalance; i++)
+    {
+      let tokenId  = await wearables.methods.tokenOfOwnerByIndex(accounts[0], i).call()
+      let tokenURI = await wearables.methods.tokenURI(tokenId).call()
+      let wearableType = await wearables.methods.getType(tokenId).call()
+      let wearableLevel = await wearables.methods.getLevel(tokenId).call()
+      accountWearables.push(tokenId)
+      accountWearablesURI.push(tokenURI)
+      addWearableImage(tokenId, wearableType, wearableLevel, tokenURI)
+    }
+
+
+    for(dungeonId=1; dungeonId<=4; dungeonId+=1)
+    {
+      dungeon = await dungeons.methods.dungeons(dungeonId).call()
+      let dungeonLevel = dungeon[1]
+      if(characterLevel && parseInt(dungeonLevel) <= parseInt(characterLevel))
+      {
+        let dungeonDuration = readableTime(dungeon[0])
+
+        const dungeonText = document.createTextNode(
+          "Dungeon #" + dungeonId +
+          " | Duration: " + dungeonDuration +
+          " | Minimum level: " + dungeonLevel
+        );
+        var dungeonsElement = document.getElementById("dungeonsElement");
+        var dungeonImage = document.createElement("img");
+        dungeonImage.src = "/img/dungeons/" + dungeonId + ".png";
+        dungeonImage.height = "250";
+        dungeonsElement.appendChild(dungeonText);
+        dungeonsElement.appendChild(document.createElement("br"));
+        dungeonsElement.appendChild(dungeonImage);
+        dungeonsElement.appendChild(document.createElement("br"));
+      
+        /*
+        probabilities = ""
+        for(wearableId=1; wearableId<=8; wearableId++)
+        {
+          probability = await dungeons.methods.getDungeonLootProbability(dungeonId, wearableId).call()
+          if(probability != 0)
+          {
+            probabilities += " wearable " + wearableId + " " + probability/100 + "%,"
+          }
+        }
+        const dungeonProbabilitiesText = document.createTextNode(
+          probabilities
+        );
+        dungeonsElement.appendChild(dungeonProbabilitiesText);
+        */
+        if(!currentDungeon)
+        {
+          let enterDungeonButton = document.createElement("button");
+          enterDungeonButton.innerHTML = "Enter Dungeon";
+          enterDungeonButton.dungeonId = "" + dungeonId;
+          enterDungeonButton.onclick = function (eventParam) {
+            enterDungeon(mainCharacterId, eventParam.srcElement.dungeonId)
+          };
+          dungeonsElement.appendChild(enterDungeonButton);
+        }
+        if(dungeonId == currentDungeon && currentTime > lootTimestamp)
+        {        
+          let lootButton = document.createElement("button");
+          lootButton.innerHTML = "Loot";
+          lootButton.onclick = function () {
+            loot(mainCharacterId)
+          };
+          dungeonsElement.appendChild(lootButton);
+        }
+
+        dungeonsElement.appendChild(document.createElement("br"));
+        dungeonsElement.appendChild(document.createElement("br"));
+      }
+    }
   }
 }
 
@@ -272,10 +361,12 @@ const approve = async (wearableId) => {
   const result = await wearables.methods.approve(CHARACTER_EQUIPMENT_ADDRESS, wearableId)
   .send({ from: accounts[0], gas: 0, value: 0 })
   .on('transactionHash', function(hash){
-    document.getElementById("web3_message").textContent="Executing...";
+    document.getElementById("web3_message").textContent="Confirming...";
   })
   .on('receipt', function(receipt){
-    document.getElementById("web3_message").textContent="Success.";    })
+    document.getElementById("web3_message").textContent="Success! Refreshing now...";
+    window.location.reload()
+  })
   .catch((revertReason) => {
     console.log("ERROR! Transaction reverted: " + revertReason.receipt.transactionHash)
   });
@@ -285,10 +376,12 @@ const mintCharacter = async (wearableId) => {
   const result = await characters.methods.mint(accounts[0])
   .send({ from: accounts[0], gas: 0, value: 0 })
   .on('transactionHash', function(hash){
-    document.getElementById("web3_message").textContent="Executing...";
+    document.getElementById("web3_message").textContent="Confirming...";
   })
   .on('receipt', function(receipt){
-    document.getElementById("web3_message").textContent="Success.";    })
+    document.getElementById("web3_message").textContent="Success! Refreshing now...";
+    window.location.reload()
+  })
   .catch((revertReason) => {
     console.log("ERROR! Transaction reverted: " + revertReason.receipt.transactionHash)
   });
@@ -298,10 +391,12 @@ const enterDungeon = async (characterId, dungeonId) => {
   const result = await dungeons.methods.enterDungeon(characterId, dungeonId)
   .send({ from: accounts[0], gas: 0, value: 0 })
   .on('transactionHash', function(hash){
-    document.getElementById("web3_message").textContent="Executing...";
+    document.getElementById("web3_message").textContent="Confirming...";
   })
   .on('receipt', function(receipt){
-    document.getElementById("web3_message").textContent="Success.";    })
+    document.getElementById("web3_message").textContent="Success! Refreshing now...";
+    window.location.reload()
+  })
   .catch((revertReason) => {
     console.log("ERROR! Transaction reverted: " + revertReason.receipt.transactionHash)
   });
@@ -311,45 +406,66 @@ const loot = async (characterId) => {
   const result = await dungeons.methods.loot(characterId)
   .send({ from: accounts[0], gas: 0, value: 0 })
   .on('transactionHash', function(hash){
-    document.getElementById("web3_message").textContent="Executing...";
+    document.getElementById("web3_message").textContent="Confirming...";
   })
   .on('receipt', function(receipt){
-    document.getElementById("web3_message").textContent="Success.";    })
+    document.getElementById("web3_message").textContent="Success! Refreshing now...";
+    window.location.reload()
+  })
   .catch((revertReason) => {
     console.log("ERROR! Transaction reverted: " + revertReason.receipt.transactionHash)
   });
 }
 
-const equip = async (characterId, wearableId) => {
-  const result = await characterEquipment.methods.equip(characterId, wearableId)
+const equip = async (wearableId) => {
+  const result = await characterEquipment.methods.equip(mainCharacterId, wearableId)
   .send({ from: accounts[0], gas: 0, value: 0 })
   .on('transactionHash', function(hash){
-    document.getElementById("web3_message").textContent="Executing...";
+    document.getElementById("web3_message").textContent="Confirming...";
   })
   .on('receipt', function(receipt){
-    document.getElementById("web3_message").textContent="Success.";    })
+    document.getElementById("web3_message").textContent="Success! Refreshing now...";
+    updateMetadata(mainCharacterId)
+  })
   .catch((revertReason) => {
     console.log("ERROR! Transaction reverted: " + revertReason.receipt.transactionHash)
   });
 }
 
-const unequip = async (characterId, wearableType) => {
-  const result = await characterEquipment.methods.unequip(characterId, wearableType)
+const unequip = async (wearableType) => {
+  const result = await characterEquipment.methods.unequip(mainCharacterId, wearableType)
   .send({ from: accounts[0], gas: 0, value: 0 })
   .on('transactionHash', function(hash){
-    document.getElementById("web3_message").textContent="Executing...";
+    document.getElementById("web3_message").textContent="Confirming...";
   })
   .on('receipt', function(receipt){
-    document.getElementById("web3_message").textContent="Success.";    })
+    document.getElementById("web3_message").textContent="Success! Refreshing now...";
+    updateMetadata(mainCharacterId)
+  })
+  .catch((revertReason) => {
+    console.log("ERROR! Transaction reverted: " + revertReason.receipt.transactionHash)
+  });
+}
+
+const setWhitelist = async (whitelistAccounts) => {
+  const result = await characters.methods.setWhitelist(whitelistAccounts)
+  .send({ from: accounts[0], gas: 0, value: 0 })
+  .on('transactionHash', function(hash){
+    document.getElementById("web3_message").textContent="Confirming...";
+  })
+  .on('receipt', function(receipt){
+    document.getElementById("web3_message").textContent="Success! Refreshing now...";
+    window.location.reload()
+  })
   .catch((revertReason) => {
     console.log("ERROR! Transaction reverted: " + revertReason.receipt.transactionHash)
   });
 }
 
 const updateMetadata = async (characterId) => {
-  fetch("http://localhost:3005/update/" + characterId)
+  fetch(METADA_API_URL + "/update/" + characterId)
   .then(res => res.json())
   .then(out =>
-    console.log(out))
+    window.location.reload())
   .catch();
 }

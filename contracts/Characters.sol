@@ -4,11 +4,16 @@ pragma solidity 0.8.19;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
 contract Characters is ERC721, ERC721Enumerable, Ownable {
+    
+    using Counters for Counters.Counter;
+
     // Public variables
-    uint public tokenCount = 1;
+    Counters.Counter private tokenIds;
     mapping(uint characterId => uint characterType) public characterTypes;
+    mapping(address account => bool isWhitelisted) public whitelist;
     uint public characterTypeAmount = 4;
 
     // Internal variables
@@ -18,13 +23,17 @@ contract Characters is ERC721, ERC721Enumerable, Ownable {
 
     constructor() ERC721("Character", "CHAR") {}
 
+    // Public functions
+
     function mint(address to) public {
-        _mint(to, tokenCount);
-        characterTypes[tokenCount] = getRandomNumber(characterTypeAmount); 
-        tokenCount  += 1;
+        require(whitelist[msg.sender], "Must be whitelisted");
+        whitelist[msg.sender] = false;
+        tokenIds.increment();
+        _mint(to, tokenIds.current());
+        characterTypes[tokenIds.current()] = getRandomNumber(characterTypeAmount); 
     }
 
-    // Public Functions
+    // View Functions
 
     function getCharacterType(uint characterId) public view returns(uint) {
         return characterTypes[characterId];
@@ -38,6 +47,12 @@ contract Characters is ERC721, ERC721Enumerable, Ownable {
 
     function setCharacterTypeAmount(uint amount) public onlyOwner {
         characterTypeAmount = amount;
+    }
+
+    function setWhitelist(address[] memory accounts) public onlyOwner {
+        for(uint256 i; i < accounts.length; i++){
+            whitelist[accounts[i]] = true;
+        }
     }
 
     // Overrided functions

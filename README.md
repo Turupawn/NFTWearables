@@ -15,8 +15,38 @@ npx hardhat run scripts/deploy.js
 ## Sepolia deploy
 
 ```
-Characters:           0xbbAd0e891922A8A4a7e9c39d4cc0559117016fec
-Wearables:            0x38E33D067F03a5cDc02C301b2c306cb0414549Bf
-Character equipment:  0xe7b82794Cab21e665a3e6f8ea562d392AA6E0619
-Dungeons:             0xd5dd33650Ef1DC6D23069aEDC8EAE87b0D3619B2
+Characters:           0x28EDA267FcB76Da69D7ba358BbBB2e7180C32227
+Wearables:            0x28Af59a8688b0EBaDAb6ad0480459a6Eb0dfd13e
+Character equipment:  0xE0E2ee0FFB00814a17bD75552421a9D6De7E8e57
+Dungeons:             0x1D59e95cd7daA226cD718B3CBaFbBbB8AF528D66
 ```
+
+```
+Characters:           0x5FbDB2315678afecb367f032d93F642f64180aa3
+Wearables:            0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
+Character equipment:  0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
+Dungeons:             0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9
+```
+
+## Launch step by step
+
+First we launch the contracts.
+
+```
+npx hardhat run scripts/deployTest.js --network optimism
+```
+
+Then we verify them.
+
+```
+npx hardhat verify ... --network optimism
+```
+
+* Launch the API backend on digital ocean
+* Test if API is running correctly
+* Bind domain name to API
+* Set the new domain name on API Backend and relaunch 
+* Set new domain on client code
+* Set new domain dame on-chain with `TODO`
+* Launch the frontend on netlify
+* Whitelist on the netlify frontend with `setWhitelist(["0x707e55a12557E89915D121932F83dEeEf09E5d70"])`

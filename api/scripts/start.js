@@ -1,7 +1,9 @@
 var MAX_SUPPLY = 99999999
-const CHARACTERS_ADDRESS = "0xbbAd0e891922A8A4a7e9c39d4cc0559117016fec"
-const WEARABLES_ADDRESS = "0x38E33D067F03a5cDc02C301b2c306cb0414549Bf"
-const CHARACTER_EQUIPMENT_ADDRESS = "0xe7b82794Cab21e665a3e6f8ea562d392AA6E0619"
+
+const CHARACTERS_ADDRESS = "0x28EDA267FcB76Da69D7ba358BbBB2e7180C32227"
+const WEARABLES_ADDRESS = "0x28Af59a8688b0EBaDAb6ad0480459a6Eb0dfd13e"
+const CHARACTER_EQUIPMENT_ADDRESS = "0xE0E2ee0FFB00814a17bD75552421a9D6De7E8e57"
+const metadataAPIURL = "http://localhost:3005"
 
 const PORT = 3005
 const IS_REVEALED = true
@@ -56,13 +58,24 @@ async function serveMetadataCharacters(res, nft_id) {
     return_value = {error: "NFT ID must be already minted"}
   }else
   {
-    return_value = fs.readFileSync("./metadata/characters/" + nft_id).toString().trim()
+    return_value = {
+      "name":"Dungeon Crawler Character#" + nft_id,
+      "description":"Playable character. Equip weapons, deafeat dungeons, loot more weapons.",
+      "image": metadataAPIURL + "/charactersEquiped/" + nft_id + ".png",
+      "attributes":[
+        /*
+        {"trait_type":"Fondos","value":"z"},
+        */
+      ]
+    }
+    //return_value = fs.readFileSync("./metadata/characters/" + nft_id).toString().trim()
   }
   res.send(return_value)
 }
 
 async function serveMetadataWearables(res, nft_id) {
   var token_count = parseInt(await wearablesContract.methods.totalSupply().call())
+  var wearableType = parseInt(await wearablesContract.methods.getType(nft_id).call())
   let return_value = {}
   if(nft_id < 0)
   {
@@ -79,7 +92,17 @@ async function serveMetadataWearables(res, nft_id) {
   */
   else
   {
-    return_value = fs.readFileSync("./metadata/wearables/" + nft_id).toString().trim()
+    return_value = {
+      "name":"Dungeon Crawler Weapon#" + nft_id,
+      "description":"Equip this to your character to level up.",
+      "image": metadataAPIURL + "/wearableTypes/" + wearableType + ".png",
+      "attributes":[
+        /*
+        {"trait_type":"Fondos","value":"z"},
+        */
+      ]
+    }
+    //return_value = fs.readFileSync("./metadata/wearables/" + nft_id).toString().trim()
   }
   res.send(return_value)
 }
@@ -118,13 +141,8 @@ app.get('/metadata/wearables/:id', (req, res) => {
 
 async function updateMetadata(res, characterId) {
   var shieldEquipmentId = parseInt(await characterEquipmentContract.methods.getCharacterEquipment(characterId, "1").call());
-  var swordEquipmentId = parseInt(await characterEquipmentContract.methods.getCharacterEquipment(characterId, "2").call());
+  var weaponEquipmentId = parseInt(await characterEquipmentContract.methods.getCharacterEquipment(characterId, "2").call());
 
-  console.log("==============")
-  console.log("Character: " + characterId)
-  console.log("Shield:    " + shieldEquipmentId)
-  console.log("Sword:     " + swordEquipmentId)
-  console.log("==============")
   // Reset uhm
   var characterTypeId = await charactersContract.methods.getCharacterType(characterId).call()
   mergeImages("./images/charactersTypes/" + characterTypeId + ".png",
@@ -135,14 +153,16 @@ async function updateMetadata(res, characterId) {
 
   if(shieldEquipmentId != "0")
   {
+    var wearableType = parseInt(await wearablesContract.methods.getType(shieldEquipmentId).call())
     mergeImages("./images/charactersTypes/" + characterTypeId + ".png",
-      "./images/wearables/" + shieldEquipmentId + ".png",
+      "./images/wearableTypes/" + wearableType + ".png",
       "./images/charactersEquiped/" + characterId + ".png")
   }
-  if(swordEquipmentId != "0")
+  if(weaponEquipmentId != "0")
   {
+    var wearableType = parseInt(await wearablesContract.methods.getType(weaponEquipmentId).call())
     mergeImages("./images/charactersEquiped/" + characterId + ".png",
-      "./images/wearables/" + swordEquipmentId + ".png",
+      "./images/wearableTypes/" + wearableType + ".png",
       "./images/charactersEquiped/" + characterId + ".png")
   }
 

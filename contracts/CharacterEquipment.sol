@@ -9,7 +9,7 @@ contract CharacterEquipment {
     Characters public characters;
     Wearables public wearables;
 
-    mapping(uint characterId => mapping(uint wearableType => uint wearableId)) public characterEquipment;
+    mapping(uint characterId => mapping(uint wearableCategory => uint wearableId)) public characterEquipment;
 
     constructor(address charactersAddress, address wearablesAddress) {
         characters = Characters(charactersAddress);
@@ -19,35 +19,36 @@ contract CharacterEquipment {
     // Public functions
 
     function equip(uint characterId, uint wearableId) public {
-        // TODO equip should rever if type doesn't match
         require(characters.ownerOf(characterId) == msg.sender, "Sender must be the character owner.");
         require(wearables.ownerOf(wearableId) == msg.sender, "Sender must be the wearable owner.");
 
-        if(characterEquipment[characterId][wearables.getWearableType(wearableId)] != 0)
+        uint wearableCategory = wearables.getCategory(wearables.getType(wearableId));
+
+        if(characterEquipment[characterId][wearableCategory] != 0)
         {
-            unequip(characterId, wearables.getWearableType(wearableId));
+            unequip(characterId, wearableCategory);
         }
     
-        characterEquipment[characterId][wearables.getWearableType(wearableId)] = wearableId;
+        characterEquipment[characterId][wearableCategory] = wearableId;
         wearables.transferFrom(msg.sender, address(this), wearableId);
     }
 
-    function unequip(uint characterId, uint wearableType) public {
+    function unequip(uint characterId, uint wearableCategory) public {
         require(characters.ownerOf(characterId) == msg.sender, "Sender must be the character owner.");
-        uint wearableId = characterEquipment[characterId][wearableType];
-        characterEquipment[characterId][wearableType] = 0;
+        uint wearableId = characterEquipment[characterId][wearableCategory];
+        characterEquipment[characterId][wearableCategory] = 0;
         wearables.transferFrom(address(this), msg.sender, wearableId);
     }
 
     // View functions
 
-    function getCharacterEquipment(uint characterId, uint wearableType) public view returns(uint) {
-        return characterEquipment[characterId][wearableType];
+    function getCharacterEquipment(uint characterId, uint wearableCategory) public view returns(uint) {
+        return characterEquipment[characterId][wearableCategory];
     }
 
-    function getCharacterLevel(uint characterId, uint wearableTypeAmount) public view returns(uint) {
+    function getCharacterLevel(uint characterId, uint wearableCategoryAmount) public view returns(uint) {
         uint totalLevel;
-        for(uint i=1; i<=wearableTypeAmount; i++)
+        for(uint i=1; i<=wearableCategoryAmount; i++)
         {
             totalLevel += wearables.getLevel(getCharacterEquipment(characterId, i));
         }

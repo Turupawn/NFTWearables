@@ -4,10 +4,16 @@ pragma solidity 0.8.19;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
 contract Wearables is ERC721, ERC721Enumerable, Ownable {
-    uint256 public tokenCount;
+
+    using Counters for Counters.Counter;
+
+    // Public variables
+    Counters.Counter private tokenIds;
     mapping(uint wearableId => uint wearableType) public wearableTypes;
+    mapping(uint wearableType => uint wearableCategory) public wearableCategories;
     mapping(uint wearableType => uint level) public wearableTypeLevel;
     mapping(address account => bool isMinter) public isMinter;
 
@@ -22,15 +28,24 @@ contract Wearables is ERC721, ERC721Enumerable, Ownable {
         wearableTypeLevel[6] = 15;
         wearableTypeLevel[7] = 25;
         wearableTypeLevel[8] = 50;
+
+        wearableCategories[1] = 1;
+        wearableCategories[2] = 2;
+        wearableCategories[3] = 1;
+        wearableCategories[4] = 2;
+        wearableCategories[5] = 1;
+        wearableCategories[6] = 2;
+        wearableCategories[7] = 2;
+        wearableCategories[8] = 2;
     }
 
     // Public functions
 
     function mint(address to, uint wearableType) public {
         require(isMinter[msg.sender], "Sender is not minter");
-        tokenCount += 1; // Token 0 is invalid
-        _mint(to, tokenCount);
-        wearableTypes[tokenCount] = wearableType;
+        tokenIds.increment();
+        _mint(to, tokenIds.current());
+        wearableTypes[tokenIds.current()] = wearableType;
     }
 
     // Owner Functions
@@ -41,6 +56,10 @@ contract Wearables is ERC721, ERC721Enumerable, Ownable {
 
     function setWearableTypeLevel(uint wearableType, uint level) public onlyOwner {
         wearableTypeLevel[wearableType] = level;
+    }
+
+    function setWearableCategory(uint wearableCategory, uint level) public onlyOwner {
+        wearableCategories[wearableCategory] = level;
     }
 
     function setMinter(address address_, bool value) public onlyOwner {
@@ -67,7 +86,11 @@ contract Wearables is ERC721, ERC721Enumerable, Ownable {
         return wearableTypeLevel[wearableTypes[wearableId]];
     }
 
-    function getWearableType(uint wearableId) public view returns(uint) {
+    function getType(uint wearableId) public view returns(uint) {
         return wearableTypes[wearableId];
+    }
+
+    function getCategory(uint wearableId) public view returns(uint) {
+        return wearableCategories[wearableId];
     }
 }
