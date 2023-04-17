@@ -5,15 +5,13 @@ require('dotenv').config()
 module.exports = {
   solidity: "0.8.19",
   networks: {
-    /*
-    goerli: {
-      url: process.env.GOERLI_RPC_URL,
-      accounts: [process.env.GOERLI_PRIVATE_KEY]
-    },
-    */
     sepolia: {
-      url: process.env.SEPOLIA_RPC_URL,
-      accounts: [process.env.SEPOLIA_PRIVATE_KEY]
+      url: process.env.SEPOLIA_RPC_URL || "",
+      accounts: [process.env.SEPOLIA_PRIVATE_KEY  || ""]
+    },
+    optimism: {
+      url: process.env.OPTIMISM_RPC_URL || "",
+      accounts: [process.env.OPTIMISM_PRIVATE_KEY  || ""]
     },
   },
   etherscan: {
